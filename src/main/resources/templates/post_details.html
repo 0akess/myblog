@@ -1,0 +1,706 @@
+<!DOCTYPE html>
+<html xmlns:th="http://www.thymeleaf.org">
+<head>
+    <meta charset="UTF-8">
+    <title th:text="${post.title}">Детали поста</title>
+    <link href="https://fonts.googleapis.com/css2?family=Inter:wght@400;600&display=swap" rel="stylesheet">
+
+    <style>
+        body {
+            background: linear-gradient(to bottom, rgba(131, 255, 246, 0.1), rgba(0, 123, 255, 0.2));
+            margin: 0;
+            padding: 0;
+            font-family: 'Inter', sans-serif;
+            display: flex;
+            justify-content: center;
+            align-items: center;
+            min-height: 100vh;
+        }
+
+        body::before {
+            content: none;
+        }
+
+        h1, h2, h3, h4 {
+            color: #333;
+            margin-bottom: 15px;
+        }
+
+        .content-wrapper {
+            display: flex;
+            flex-direction: column;
+            align-items: center;
+            width: 100%;
+        }
+
+        .post-container, .comment-section {
+            background-color: rgba(253, 253, 253, 0.98);
+            border-radius: 10px;
+            padding: 20px;
+            margin: 20px 0;
+            width: 80%;
+            max-width: 1000px;
+            box-shadow: 0 4px 12px rgba(0, 0, 0, 0.1);
+            transition: transform 0.3s ease;
+        }
+
+        .post-container:hover {
+            transform: scale(1.01);
+        }
+
+        .comment {
+            background-color: #f1f3f5;
+            padding: 15px;
+            border-radius: 8px;
+            margin-bottom: 12px;
+            font-size: 15px;
+        }
+
+        .comment p {
+            margin-bottom: 30px;
+        }
+
+        .tag {
+            background-color: #e0e0e0;
+            padding: 6px 12px;
+            border-radius: 20px;
+            margin-right: 8px;
+            display: inline-block;
+            font-size: 13px;
+            color: #555;
+            transition: background-color 0.3s ease;
+        }
+
+        .tag:hover {
+            background-color: #ccc;
+            cursor: pointer;
+        }
+
+        .post-stats {
+            margin-top: 20px;
+            padding: 12px;
+            border-radius: 8px;
+            background-color: #fafafa;
+            border: 1px solid #ddd;
+            font-size: 14px;
+            color: #555;
+        }
+
+        button {
+            padding: 10px 20px;
+            border: none;
+            border-radius: 6px;
+            cursor: pointer;
+            transition: all 0.3s ease;
+            font-size: 15px;
+            font-weight: 500;
+            margin-bottom: 15px;
+        }
+
+        .like-button {
+            background-color: transparent;
+            border: 2px solid rgba(255, 101, 160, 0.53);
+            color: #ff63bf;
+        }
+
+        .like-button:hover {
+            background-color: rgba(181, 11, 70, 0.1);
+            transform: scale(1.05);
+        }
+
+        .back-to-feed {
+            position: fixed;
+            top: 20px;
+            left: 20px;
+            z-index: 1000;
+        }
+
+        .back-button {
+            background-color: transparent;
+            border: 2px solid #007BFFCC;
+            color: rgba(0, 123, 255, 0.8);
+            padding: 10px 20px;
+            border-radius: 8px;
+            font-size: 14px;
+            font-weight: 600;
+            cursor: pointer;
+            transition: background-color 0.3s, transform 0.2s;
+        }
+
+        .back-button:hover {
+            background-color: rgba(40, 167, 69, 0.1);
+            transform: scale(1.05);
+        }
+
+        .post-detail-image {
+            width: 250px;
+            height: 250px;
+            object-fit: cover;
+            border-radius: 10px;
+            margin-bottom: 20px;
+            box-shadow: 0 4px 8px rgba(0, 0, 0, 0.1);
+        }
+
+        .modal {
+            display: none;
+            position: fixed;
+            top: 0;
+            left: 0;
+            width: 100%;
+            height: 100%;
+            background-color: rgba(0, 0, 0, 0.5);
+            justify-content: center;
+            align-items: center;
+            z-index: 1000;
+        }
+
+        .modal-content {
+            background-color: #fff;
+            padding: 25px;
+            border-radius: 10px;
+            width: 450px;
+            box-shadow: 0 4px 10px rgba(0, 0, 0, 0.2);
+            animation: fadeIn 0.3s ease-in-out;
+        }
+
+        @keyframes fadeIn {
+            from { opacity: 0; transform: translateY(-20px); }
+            to { opacity: 1; transform: translateY(0); }
+        }
+
+        .dropdown {
+            position: absolute;
+            top: 15px;
+            right: 15px;
+        }
+
+        .dropdown-toggle {
+            background-color: transparent;
+            border: none;
+            font-size: 24px;
+            cursor: pointer;
+            padding: 5px;
+            line-height: 1;
+            transform: rotate(90deg);
+        }
+
+        .dropdown-menu {
+            display: none;
+            position: absolute;
+            right: 0;
+            top: 35px;
+            background-color: #fff;
+            box-shadow: 0 4px 12px rgba(0, 0, 0, 0.2);
+            border-radius: 8px;
+            overflow: hidden;
+            z-index: 1000;
+            width: 180px;
+        }
+
+        .dropdown-menu button {
+            background-color: transparent;
+            border: none;
+            padding: 15px 25px;
+            width: 100%;
+            text-align: left;
+            cursor: pointer;
+            font-size: 16px;
+        }
+
+        .dropdown-menu button:hover {
+            background-color: #f0f0f0;
+        }
+
+        .dropdown-toggle:hover + .dropdown-menu,
+        .dropdown-menu:hover {
+            display: block;
+        }
+
+        .comment {
+            position: relative;
+            background-color: #f9f9f9;
+            padding: 20px;
+            border-radius: 8px;
+            margin-bottom: 15px;
+            box-shadow: 0 2px 6px rgba(0, 0, 0, 0.1);
+            font-size: 16px;
+            line-height: 1.5;
+        }
+
+        .edit-comment-btn {
+            position: absolute;
+            bottom: 10px;
+            left: 10px;
+            background-color: transparent;
+            border: none;
+            color: rgba(0, 123, 255, 0.8);
+            font-size: 14px;
+            cursor: pointer;
+            padding: 2px 5px;
+            transition: color 0.3s ease;
+        }
+
+        .edit-comment-btn:hover {
+            color: rgba(0, 123, 255, 1);
+        }
+
+        .delete-comment-btn {
+            position: absolute;
+            top: 8px;
+            right: 8px;
+            background-color: transparent;
+            border: none;
+            color: rgba(255, 0, 0, 0.8);
+            font-size: 18px;
+            cursor: pointer;
+            padding: 2px;
+        }
+
+        .delete-comment-btn:hover {
+            color: rgba(255, 0, 0, 1);
+        }
+
+        .comment-form {
+            display: flex;
+            align-items: flex-start;
+            gap: 10px;
+            margin-top: 20px;
+        }
+
+        .comment-form textarea {
+            width: 100%;
+            min-height: 150px;
+            padding: 15px;
+            border-radius: 8px;
+            border: 1px solid #ccc;
+            font-size: 16px;
+            resize: vertical;
+            box-shadow: inset 0 1px 3px rgba(0, 0, 0, 0.1);
+        }
+
+        .comment-form textarea:focus {
+            outline: none;
+            border-color: #007bff;
+            box-shadow: 0 0 5px rgba(0, 123, 255, 0.3);
+        }
+
+        .comment-form button {
+            padding: 12px 20px;
+            border: none;
+            background-color: #28a745;
+            color: white;
+            border-radius: 5px;
+            font-size: 16px;
+            cursor: pointer;
+            transition: background-color 0.3s ease;
+            height: 100%;
+        }
+
+        .comment-form button:hover {
+            background-color: #0056b3;
+        }
+
+        .preserve-line-breaks {
+            white-space: pre-line;
+            font-size: 16px;
+            line-height: 1.6;
+            margin-top: 10px;
+        }
+
+        .modal {
+            display: none;
+            position: fixed;
+            top: 0;
+            left: 0;
+            width: 100%;
+            height: 100%;
+            background-color: rgba(0, 0, 0, 0.6);
+            justify-content: center;
+            align-items: center;
+            z-index: 999;
+        }
+
+        .modal-content {
+            background-color: #fff;
+            padding: 30px 40px;
+            border-radius: 10px;
+            width: 600px;
+            box-shadow: 0 8px 16px rgba(0, 0, 0, 0.2);
+            text-align: left;
+            max-height: 90vh;
+            overflow-y: auto;
+        }
+
+        .modal-content h3 {
+            margin-bottom: 20px;
+            font-size: 24px;
+            color: #333;
+        }
+
+        .modal-content input[type="text"],
+        .modal-content textarea {
+            width: 100%;
+            padding: 15px;
+            margin-bottom: 20px;
+            border-radius: 8px;
+            border: 1px solid #ccc;
+            font-size: 16px;
+            background-color: #f9f9f9;
+            box-shadow: inset 0 2px 4px rgba(0, 0, 0, 0.05);
+        }
+
+        .modal-content textarea {
+            resize: vertical;
+            height: 150px;
+        }
+
+        .modal-buttons {
+            display: flex;
+            justify-content: flex-end;
+            gap: 10px;
+        }
+
+        .action-button {
+            padding: 12px 24px;
+            border: none;
+            border-radius: 8px;
+            font-size: 16px;
+            cursor: pointer;
+            transition: background-color 0.3s ease, transform 0.2s ease;
+        }
+
+        .save-button {
+            background-color: #28a745;
+            color: white;
+        }
+
+        .save-button:hover {
+            background-color: #218838;
+            transform: scale(1.05);
+        }
+
+        .cancel-button {
+            background-color: transparent;
+            border: 2px solid #dc3545;
+            color: #dc3545;
+        }
+
+        .input-group {
+            position: relative;
+            margin-bottom: 20px;
+        }
+
+        .error-message {
+            color: red;
+            font-size: 12px;
+            position: absolute;
+            bottom: -18px;
+            left: 0;
+        }
+
+    </style>
+</head>
+<body>
+
+<div class="back-to-feed">
+    <a th:href="@{/}">
+        <button class="back-button">⬅ Вернуться к ленте</button>
+    </a>
+</div>
+
+<div class="content-wrapper">
+    <div class="post-container">
+        <div class="dropdown">
+            <button class="dropdown-toggle">⋯</button>
+            <div class="dropdown-menu">
+                <button class="edit-post-btn"
+                        th:attr="data-post-id=${post.id},
+                         data-post-title=${post.title},
+                         data-post-content=${post.content},
+                         data-post-imageUrl=${post.imageUrl},
+                         data-post-tags=${#strings.arrayJoin(post.tags, ', ')}">
+                    Редактировать
+                </button>
+                <button class="delete-post-btn" th:attr="data-post-id=${post.id}">
+                    Удалить
+                </button>
+            </div>
+        </div>
+
+        <h1 th:text="${post.title}"></h1>
+
+        <div class="tags">
+            <span class="tag" th:each="tag : ${post.tags}" th:text="${tag}"></span>
+        </div>
+
+        <p class="post-stats">
+            ❤️ Лайков: <span th:text="${post.likes}"></span> |
+            💬 Комментариев: <span th:text="${post.comments.size()}"></span>
+        </p>
+
+        <img th:src="${post.imageUrl}" alt="Изображение поста" class="post-detail-image">
+
+        <p class="preserve-line-breaks" th:text="${post.content}"></p>
+
+        <button class="action-button like-button" th:onclick="'likePost(' + ${post.id} + ')'">❤️ Лайк</button>
+    </div>
+
+    <div class="comment-section">
+        <h3>Комментарии</h3>
+
+        <div th:each="comment : ${comments}" class="comment">
+            <button class="delete-comment-btn"
+                    th:attr="data-comment-id=${comment.id}">
+                🗑️
+            </button>
+
+            <p th:text="${comment.content}" id="comment-content-[[${comment.id}]]"></p>
+
+            <button class="edit-comment-btn"
+                    th:attr="data-comment-id=${comment.id},
+                data-comment-content=${comment.content}">
+                редактировать
+            </button>
+        </div>
+
+        <form th:action="@{'/comments/add/' + ${post.id}}" method="post" class="comment-form" onsubmit="return validateComment()">
+            <textarea id="commentContent" name="content" placeholder="Напишите комментарий..." required></textarea>
+            <div id="error-comment" class="error-message"></div>
+            <button type="submit">Отправить</button>
+        </form>
+    </div>
+</div>
+
+<div id="editPostModal" class="modal">
+    <div class="modal-content">
+        <h3>Редактировать пост</h3>
+
+        <div class="input-group">
+            <label for="editPostTitle">Заголовок:</label>
+            <input type="text" id="editPostTitle" placeholder="Введите заголовок поста">
+            <div id="error-editPostTitle" class="error-message"></div>
+        </div>
+
+        <div class="input-group">
+            <label for="editPostContent">Содержимое:</label>
+            <textarea id="editPostContent" placeholder="Введите текст поста"></textarea>
+            <div id="error-editPostContent" class="error-message"></div>
+        </div>
+
+        <div class="input-group">
+            <label for="editPostImageUrl">Ссылка на изображение:</label>
+            <input type="text" id="editPostImageUrl" placeholder="Введите ссылку на изображение">
+            <div id="error-editPostImageUrl" class="error-message"></div>
+        </div>
+
+        <div class="input-group">
+            <label for="editPostTags">Теги (через запятую):</label>
+            <input type="text" id="editPostTags" placeholder="Например: дизайн, UI, UX">
+            <div id="error-editPostTags" class="error-message"></div>
+        </div>
+
+        <div class="modal-buttons">
+            <button class="action-button save-button" onclick="saveEditedPost()">Сохранить</button>
+            <button class="action-button cancel-button" onclick="closeEditPostPopup()">Отмена</button>
+        </div>
+    </div>
+</div>
+
+<div id="editCommentModal" class="modal">
+    <div class="modal-content">
+        <h3>Редактировать комментарий</h3>
+
+        <label for="editCommentContent">Комментарий:</label>
+        <textarea id="editCommentContent" placeholder="Введите новый текст комментария..."></textarea>
+
+        <div class="modal-buttons">
+            <button class="action-button save-button" onclick="saveEditedComment()">Сохранить</button>
+            <button class="action-button cancel-button" onclick="closeEditCommentPopup()">Отмена</button>
+        </div>
+    </div>
+</div>
+
+<script>
+
+    function validateComment() {
+        const content = document.getElementById('commentContent').value.trim();
+        const error = document.getElementById('error-comment');
+        if (content === "") {
+            error.textContent = "Комментарий не может быть пустым.";
+            return false;
+        }
+        error.textContent = "";
+        return true;
+    }
+
+    document.addEventListener('keydown', function(event) {
+        if ((event.ctrlKey || event.metaKey) && event.key === 'Enter') {
+            event.preventDefault();
+
+            const commentForm = document.querySelector('form.comment-form');
+            if (commentForm) {
+                commentForm.submit();
+            }
+        }
+    });
+
+    let editingPostId = null;
+    let editingCommentId = null;
+
+    function openEditPostPopup(postId, title, content, imageUrl, tags) {
+        editingPostId = postId;
+
+        document.getElementById('editPostTitle').value = title;
+        document.getElementById('editPostContent').value = content;
+        document.getElementById('editPostImageUrl').value = imageUrl;
+        document.getElementById('editPostTags').value = tags;
+
+        document.getElementById('editPostModal').style.display = 'flex';
+    }
+
+    function closeEditPostPopup() {
+        document.getElementById('editPostModal').style.display = 'none';
+    }
+
+    function displayValidationErrors(errors) {
+        document.querySelectorAll('.error-message').forEach(el => el.remove());
+
+        for (const field in errors) {
+            const inputField = document.getElementById(`editPost${capitalize(field)}`);
+            if (inputField) {
+                const errorWrapper = inputField.parentElement;
+
+                const errorMessage = document.createElement('div');
+                errorMessage.className = 'error-message';
+                errorMessage.textContent = errors[field];
+
+                errorWrapper.appendChild(errorMessage);
+            }
+        }
+    }
+
+    function capitalize(str) {
+        return str.charAt(0).toUpperCase() + str.slice(1);
+    }
+
+    function saveEditedPost() {
+        const title = document.getElementById('editPostTitle').value;
+        const content = document.getElementById('editPostContent').value;
+        const imageUrl = document.getElementById('editPostImageUrl').value;
+        const tags = document.getElementById('editPostTags').value.split(',').map(tag => tag.trim());
+
+        fetch(`/posts/${editingPostId}`, {
+            method: 'PUT',
+            headers: { 'Content-Type': 'application/json' },
+            body: JSON.stringify({ title, content, imageUrl, tags })
+        })
+            .then(response => {
+                if (!response.ok) {
+                    return response.json().then(errors => {
+                        displayValidationErrors(errors);
+                        throw new Error('Ошибка валидации');
+                    });
+                }
+                return response.text();
+            })
+            .then(redirectUrl => window.location.href = redirectUrl)
+            .catch(error => console.error('Ошибка:', error));
+    }
+
+
+    function confirmDeletePost(postId) {
+        if (confirm('Вы уверены, что хотите удалить пост?')) {
+            fetch(`/posts/${postId}`, { method: 'DELETE' })
+                .then(response => response.text())
+                .then(redirectUrl => window.location.href = redirectUrl)
+                .catch(error => console.error('Ошибка при удалении поста:', error));
+        }
+    }
+
+    function openEditCommentPopup(commentId, content) {
+        editingCommentId = commentId;
+        document.getElementById('editCommentContent').value = content;
+        document.getElementById('editCommentModal').style.display = 'flex';
+    }
+
+    function closeEditCommentPopup() {
+        document.getElementById('editCommentModal').style.display = 'none';
+    }
+
+    function saveEditedComment() {
+        const editContent = document.getElementById('editCommentContent').value;
+
+        if (editContent.trim() === '') {
+            alert('Комментарий не может быть пустым!');
+            return;
+        }
+
+        fetch(`/comments/${editingCommentId}`, {
+            method: 'PUT',
+            headers: { 'Content-Type': 'application/json' },
+            body: JSON.stringify({ content: editContent })
+        })
+            .then(response => {
+                if (response.ok) {
+                    location.reload();
+                } else {
+                    alert('Ошибка при редактировании комментария');
+                }
+            })
+            .catch(error => console.error('Ошибка при редактировании комментария: ', error));
+    }
+
+    function confirmDeleteComment(commentId) {
+        if (confirm('Вы уверены, что хотите удалить комментарий?')) {
+            fetch(`/comments/${commentId}`, { method: 'DELETE' })
+                .then(response => response.text())
+                .then(redirectUrl => window.location.href = redirectUrl)
+                .catch(error => console.error('Ошибка при удалении комментария: ', error));
+        }
+    }
+
+    document.addEventListener('click', function(event) {
+        if (event.target.classList.contains('edit-post-btn')) {
+            const postId = event.target.getAttribute('data-post-id');
+            const postTitle = event.target.getAttribute('data-post-title');
+            const postContent = event.target.getAttribute('data-post-content');
+            const postImageUrl = event.target.getAttribute('data-post-imageUrl');
+            const postTags = event.target.getAttribute('data-post-tags');
+
+            openEditPostPopup(postId, postTitle, postContent, postImageUrl, postTags);
+        }
+    });
+
+    document.addEventListener('click', function(event) {
+        if (event.target.classList.contains('delete-post-btn')) {
+            const postId = event.target.getAttribute('data-post-id');
+            confirmDeletePost(postId);
+        }
+    });
+
+    document.addEventListener('click', function(event) {
+        if (event.target.classList.contains('edit-comment-btn')) {
+            const commentId = event.target.getAttribute('data-comment-id');
+            const commentContent = event.target.getAttribute('data-comment-content');
+            openEditCommentPopup(commentId, commentContent);
+        }
+    });
+
+    document.addEventListener('click', function(event) {
+        if (event.target.classList.contains('delete-comment-btn')) {
+            const commentId = event.target.getAttribute('data-comment-id');
+            confirmDeleteComment(commentId);
+        }
+    });
+
+    function likePost(postId) {
+        fetch(`/posts/${postId}/like`, { method: 'POST' })
+            .then(response => response.text())
+            .then(redirectUrl => window.location.href = redirectUrl)
+            .catch(error => console.error('Ошибка при простановке лайка: ', error));
+    }
+
+</script>
+
+</body>
+</html>
