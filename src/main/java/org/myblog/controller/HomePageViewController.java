@@ -21,12 +21,12 @@ public class HomePageViewController {
                                @RequestParam(defaultValue = "10") int size,
                                @RequestParam(required = false) String tag,
                                Model model) {
-        if (page < 0 || size <= 0) {
-            throw new IllegalArgumentException("Неверные параметры пагинации");
+        if (page < 0 || !(size == 10 || size == 20 || size == 50)) {
+            throw new IllegalArgumentException("Неверные параметры пагинации. Допустимые значения: 10, 20, 50.");
         }
 
         Page<Post> posts;
-        if (tag != null && !tag.isEmpty()) {
+        if (tag != null && !tag.isBlank()) {
             posts = postService.getPostsByTag(tag, PageRequest.of(page, size));
         } else {
             posts = postService.findAll(PageRequest.of(page, size));

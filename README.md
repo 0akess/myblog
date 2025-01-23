@@ -63,7 +63,7 @@ build/libs/myblog-0.0.1-SNAPSHOT.war
 ### 1. Собрать и запустить контейнеры
 
 ```bash
-docker-compose up --build
+docker compose up --build
 ```
 
 ### 2. Доступ к приложению

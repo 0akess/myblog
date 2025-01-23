@@ -7,7 +7,9 @@ import org.myblog.model.Post;
 import org.myblog.repository.PostRepository;
 import org.myblog.service.api.IPostService;
 import org.springframework.data.domain.Page;
+import org.springframework.data.domain.PageRequest;
 import org.springframework.data.domain.Pageable;
+import org.springframework.data.domain.Sort;
 import org.springframework.stereotype.Service;
 
 @Service
@@ -19,7 +21,12 @@ public class PostService implements IPostService {
 
     @Override
     public Page<Post> findAll(Pageable pageable) {
-        return postRepository.findAll(pageable);
+        var sortedByDateDesc = PageRequest.of(
+                pageable.getPageNumber(),
+                pageable.getPageSize(),
+                Sort.by(Sort.Direction.DESC, "createdAt")
+        );
+        return postRepository.findAll(sortedByDateDesc);
     }
 
     @Override
@@ -51,8 +58,12 @@ public class PostService implements IPostService {
 
     @Override
     public Page<Post> getPostsByTag(String tag, Pageable pageable) {
-        return postRepository
-                .findByTagsContaining(tag, pageable);
+        var sortedByDateDesc = PageRequest.of(
+                pageable.getPageNumber(),
+                pageable.getPageSize(),
+                Sort.by(Sort.Direction.DESC, "createdAt")
+        );
+        return postRepository.findByTagsContaining(tag, sortedByDateDesc);
     }
 
     @Override

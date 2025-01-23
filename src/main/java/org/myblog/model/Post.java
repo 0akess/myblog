@@ -36,5 +36,15 @@ public class Post {
 
     @OneToMany(mappedBy = "post", cascade = CascadeType.ALL, orphanRemoval = true)
     private List<Comment> comments = new ArrayList<>();
+
+    @Transient
+    private List<String> paragraphs;
+
+    public List<String> getParagraphs() {
+        if (content != null && !content.isBlank()) {
+            return List.of(content.split("\n"));
+        }
+        return new ArrayList<>();
+    }
 }
 

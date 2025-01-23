@@ -194,6 +194,16 @@
             }
         }
 
+        .post-preview {
+            display: -webkit-box;
+            -webkit-line-clamp: 3;
+            -webkit-box-orient: vertical;
+            overflow: hidden;
+            text-overflow: ellipsis;
+            max-height: 4.5em;
+            line-height: 1.5em;
+        }
+
     </style>
 </head>
 
@@ -207,6 +217,14 @@
         </a>
 
         <form th:action="@{/}" method="get" class="filter-form">
+            <label for="size">Постов на странице:</label>
+            <select name="size" id="size" onchange="this.form.submit()">
+                <option value="10" th:selected="${size == 10}">10</option>
+                <option value="20" th:selected="${size == 20}">20</option>
+                <option value="50" th:selected="${size == 50}">50</option>
+            </select>
+
+            <input type="hidden" name="page" th:value="${currentPage}">
             <input type="text" name="tag" th:value="${selectedTag}" placeholder="Фильтр по тегу">
             <button type="submit" class="search-button">Поиск</button>
         </form>
@@ -217,7 +235,8 @@
         <div class="post-content">
             <a th:href="@{'/posts/' + ${post.id}}">
                 <h2 th:text="${post.title}"></h2>
-                <p class="post-preview" th:text="${post.content}"></p>
+
+                <p class="post-preview" th:text="${post.paragraphs[0]}"></p>
             </a>
 
             <p>❤️ Лайков: <span th:text="${post.likes}"></span> | 💬 Комментариев: <span th:text="${post.comments.size()}"></span></p>
